@@ -1,0 +1,114 @@
+#!/bin/sh
+
+dockercompose_file=docker-compose.yml
+
+# ---------------------------
+# 
+#    Git
+# 
+# ---------------------------
+
+if [ $1 = push ]
+then
+
+  echo "Git: カレントブランチをPushします"
+  git symbolic-ref --short HEAD | xargs git push origin
+
+fi
+
+# ---------------------------
+# 
+#    Docker
+# 
+# ---------------------------
+
+if [ $1 = docker -o $1 = dc ]
+then
+
+if [ $2 = init ]
+then
+  echo Dockerコンテナを初期化しますか [Y/n] :
+  read ANSWER
+  case $ANSWER in
+    "" | "Y" | "y" | "yes" | "Yes" | "YES" )
+      docker-compose -f ${dockercompose_file} build
+      docker exec -it cinra_mysql mysqldump -u cinra -p3030 cinra > ./sql/develop.sql
+    ;;
+    * ) echo "NO!!";;
+  esac
+elif [ $2 = build ]
+then
+  echo Dockerイメージを生成
+  docker-compose -f ${dockercompose_file} build
+elif [ $2 = start ]
+then
+  echo Dockerコンテナを起動
+  docker-compose -f ${dockercompose_file} up -d
+elif [ $2 = stop ]
+then
+  echo Dockerコンテナを停止
+  docker-compose -f ${dockercompose_file} stop
+elif [ $2 = ssh ]
+then
+  if [ $3 ]
+  then
+    echo Dockerコンテナ$3にログイン
+    container=$3
+  else
+    docker-compose -f ${dockercompose_file} ps
+    echo コンテナ名を入力してください :
+    read container
+  fi
+  docker exec -it ${container} bash
+elif [ $2 = boot ]
+then
+  if [ $3 ]
+  then
+    machine=$3
+  else
+    machine=default
+  fi
+  echo Docker Machine$machineを起動
+  docker-machine start $machine
+  eval $(docker-machine env $machine)
+else
+  echo Exit
+fi
+
+fi
+
+# ---------------------------
+# 
+#    Ansible
+# 
+# ---------------------------
+
+if [ $1 = ans ]
+then
+  
+  if [ $2 = vhost ]
+  then
+  
+    ansible-playbook -i ansible/hosts ansible/$3.yml -t vhost
+
+  else
+
+    ansible-playbook -i ansible/hosts ansible/$2.yml
+
+  fi
+
+fi
+
+# ---------------------------
+# 
+#    Capistrano
+# 
+# ---------------------------
+
+if [ $1 = cap ]
+then
+  
+  cd capistrano
+  cap $2 $3
+
+fi

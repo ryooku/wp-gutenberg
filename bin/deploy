@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# ---------------------------
+# 
+#    Capistrano
+# 
+# ---------------------------
+
+cd capistrano
+pwd
+cap $1 deploy
