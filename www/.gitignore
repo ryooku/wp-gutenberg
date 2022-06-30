@@ -25,3 +25,4 @@ html/assets/wp-cache-config.php
 test/wp-tests-config.php
 
 vendor
+!html/wp/**
